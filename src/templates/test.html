@@ -10,16 +10,54 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
 
-        <title>{{ title }}</title>
+        <title>Test Page</title>
+
+        <style>
+            li { margin: 10px 0px; }
+            #status { font-size: 36px; }
+            #dup_vol_id, #del_vol_id { margin-right: 20px; }
+            #console {
+                font-size: 16px; 
+                font-family: 'SF Mono', sans-serif;
+            }
+        </style>
     </head>
     <body>
         <div id="status" style="font-size: 36px;"></div>
-
+        <ul>
+            <li><button id="open">Open Test Project</button></li>
+            <li><button id="close">Close Test Project</button></li>
+            <li><button id="create">Create Test Volume</button></li>
+            <li>
+                <input id="dup_vol_id" />
+                <button id="duplicate">Duplicate Test Volume</button>
+            </li>
+            <li>
+                <input id="del_vol_id" />
+                <button id="delete">Delete Test Volume</button>
+            </li>
+        </ul>
+        <div id="console"></div>
         
         <script type="text/javascript" charset="utf-8">
-            var socket = io();
+            const test_data = {_id: "0", name: "Main shade", language: "nodejs", user: "Jim Fixtures", 
+                volume_id: "ab262337d7d76541c238244568a66fbdb06accf03f0681ae0af556195238999d", 
+                last_mdate: "2020-12-01T18:47:36.754Z"}
+            var vol_id = undefined;
+            const socket = io();
             socket.on('connect', () =>  $('#status').text('Status: Connected'));
+
+            var print_status = ({ message }) => $("#console").append(`${message.replace(/\n/g,'<br/>')} <br>`);
+            var redirect = ({ url }) => window.location.replace(url);
+
+            $('#open').click(() => socket.emit('open_project', test_data));
+            $('#close').click(() => socket.emit('close_project', test_data));
             
+            $('#create').click(() => socket.emit('create_volume', console.log));
+            $('#duplicate').click(() => socket.emit('duplicate_volume', $('#dup_vol_id').val(), console.log));
+            $('#delete').click(() => socket.emit('delete_volume', $('#del_vol_id').val(), console.log));
+
+            socket.on('server_response', (data) => globalThis[data['function']](data['args']))
         </script>
     </body>
 </html>
