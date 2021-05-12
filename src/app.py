@@ -49,6 +49,7 @@ def open_project(req):
         print_status(f"Starting Container for Project: {req['name']}")
         name = f"code-server-{req['_id']}"
         port = 10000 + int(req['_id'])
+        req['volume_id'] = os.getcwd() if req['volume_id'] == "" else req['volume_id']
         # TODO: Change this to volume
         container = client.containers.run("codercom/code-server:latest", detach=True, 
                                         auto_remove=True, hostname=name, name=name, 
@@ -81,7 +82,7 @@ def close_project(req):
         container = client.containers.get(name)
         print_status(f'Logs:\n{container.logs().decode("utf-8")}')
         container.kill()
-        print_status("Stopped Container.")
+        print_status("Stopped Container.\n")
         
         return True
     except Exception as ex:
@@ -93,10 +94,20 @@ def create_volume():
     try:
         print_status(f"Creating Volume")
         volume = client.volumes.create()
-        print_status(f"Created Volume: {volume.name}")
+        name = f"vol-create-for_{volume.name[:6]}"
+        print_status(f"1, {name}")
+
+        container = client.containers.run("alpine", detach=False, stream=True, remove=True, name=name, 
+                                        volumes = {volume.name: {'bind': '/vol', 'mode': 'rw'}},
+                                        entrypoint='chown 1000:1000 /vol')
+        print_status(f"2")
+        # for log in container:
+        #     print_status(f'Logs:\n{log.decode("utf-8")}')
         
+        print_status(f"Created Volume: {volume.name}")
         return volume.name
     except Exception as ex:
+        print(ex)
         print_status(f'Error: {str(ex)}')
     return None
 
@@ -109,14 +120,13 @@ def duplicate_volume(vol_id):
         name = f"vol-dup-for-dest_{dest_vol.name[:6]}"
         print_status(f"Created Volume: {dest_vol.name}\nStarted copying data from {vol_id} to {dest_vol.name}")
         
-        container = client.containers.run("alpine", detach=False, stream=True, auto_remove=True, name=name, 
+        container = client.containers.run("alpine", detach=False, stream=True, remove=True, name=name, 
                                         volumes={
                                             vol_id: {'bind': '/from', 'mode': 'rw'},
                                             dest_vol.name: {'bind': '/to', 'mode': 'rw'},
                                         },
                                         entrypoint='cp -av /from /to')
         for log in container:
-            print(log)
             print_status(f'Logs:\n{log.decode("utf-8")}')
 
         print_status(f"{vol_id} duplicated to {dest_vol.name}")

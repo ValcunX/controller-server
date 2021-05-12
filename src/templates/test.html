@@ -25,7 +25,10 @@
     <body>
         <div id="status" style="font-size: 36px;"></div>
         <ul>
-            <li><button id="open">Open Test Project</button></li>
+            <li>
+                <input id="open_vol_id" />
+                <button id="open">Open Test Project</button>
+            </li>
             <li><button id="close">Close Test Project</button></li>
             <li><button id="create">Create Test Volume</button></li>
             <li>
@@ -41,8 +44,7 @@
         
         <script type="text/javascript" charset="utf-8">
             const test_data = {_id: "0", name: "Main shade", language: "nodejs", user: "Jim Fixtures", 
-                volume_id: "ab262337d7d76541c238244568a66fbdb06accf03f0681ae0af556195238999d", 
-                last_mdate: "2020-12-01T18:47:36.754Z"}
+                volume_id: "", last_mdate: "2020-12-01T18:47:36.754Z"}
             var vol_id = undefined;
             const socket = io();
             socket.on('connect', () =>  $('#status').text('Status: Connected'));
@@ -50,7 +52,10 @@
             var print_status = ({ message }) => $("#console").append(`${message.replace(/\n/g,'<br/>')} <br>`);
             var redirect = ({ url }) => window.location.replace(url);
 
-            $('#open').click(() => socket.emit('open_project', test_data));
+            $('#open').click(() => {
+                test_data.volume_id = $('#open_vol_id').val();
+                socket.emit('open_project', test_data);
+            });
             $('#close').click(() => socket.emit('close_project', test_data));
             
             $('#create').click(() => socket.emit('create_volume', console.log));
