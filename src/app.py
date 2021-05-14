@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, abort
 from flask_socketio import SocketIO, emit
+from flask_cors import CORS
 from dotenv import load_dotenv
 import os
 import docker
@@ -11,8 +12,9 @@ app = Flask(__name__)
 HOST = os.getenv('HOST')
 PORT = os.getenv('PORT')
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+CORS(app)
 
-socketio = SocketIO(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 client = docker.from_env()
 
@@ -47,14 +49,14 @@ def redirect(url):
 def open_project(req):
     try:
         print_status(f"Starting Container for Project: {req['name']}")
-        name = f"code-server-{req['_id']}"
-        port = 10000 + int(req['_id'])
+        name = f"code-server-{req['id']}"
+        port = 10000 + int(req['id'])
         req['volume_id'] = os.getcwd() if req['volume_id'] == "" else req['volume_id']
         # TODO: Change this to volume
         container = client.containers.run("codercom/code-server:latest", detach=True, 
                                         auto_remove=True, hostname=name, name=name, 
                                         volumes={
-                                            os.path.expanduser("~/.config"): {'bind': '/home/coder/.config', 'mode': 'rw'},
+                                            os.path.join(os.getcwd(), 'config'): {'bind': '/home/coder/.config', 'mode': 'rw'},
                                             # TODO: User perms
                                             req['volume_id']: {'bind': '/home/coder/project', 'mode': 'rw'},
                                         },
@@ -64,21 +66,21 @@ def open_project(req):
             time.sleep(1)
             container.reload()
         
-        time.sleep(5)
+        time.sleep(2)
         print_status(f'Logs:\n{container.logs().decode("utf-8")}\nStarted Container')
         print_status(f'Goto <a href="http://localhost:{port}/">http://localhost:{port}/</a>')
         # TODO: Redirect user
 
-        return True
+        return port
     except Exception as ex:
         print_status(f'Error: {str(ex)}')
-    return False
+    return None
 
 @socketio.on('close_project')
 def close_project(req):
     try:
         print_status(f"\nStopping Container for Project: {req['name']}")
-        name = f"code-server-{req['_id']}"
+        name = f"code-server-{req['id']}"
         container = client.containers.get(name)
         print_status(f'Logs:\n{container.logs().decode("utf-8")}')
         container.kill()
