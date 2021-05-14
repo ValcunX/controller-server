@@ -53,17 +53,19 @@ def open_project(req):
         port = 10000 + int(req['id'])
         req['volume_id'] = os.getcwd() if req['volume_id'] == "" else req['volume_id']
         # TODO: Change this to volume
+        print(os.path.join(os.getcwd(), 'config'))
         container = client.containers.run("codercom/code-server:latest", detach=True, 
-                                        auto_remove=True, hostname=name, name=name, 
+                                        hostname=name, name=name, 
                                         volumes={
                                             os.path.join(os.getcwd(), 'config'): {'bind': '/home/coder/.config', 'mode': 'rw'},
                                             # TODO: User perms
                                             req['volume_id']: {'bind': '/home/coder/project', 'mode': 'rw'},
                                         },
                                         ports={"8080": port})
-    
+
         while container.status != "running":
             time.sleep(1)
+            print_status(f'Logs:\n{container.logs().decode("utf-8")}\nStarted Container')
             container.reload()
         
         time.sleep(2)
@@ -84,6 +86,7 @@ def close_project(req):
         container = client.containers.get(name)
         print_status(f'Logs:\n{container.logs().decode("utf-8")}')
         container.kill()
+        container.remove()
         print_status("Stopped Container.\n")
         
         return True
