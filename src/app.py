@@ -54,7 +54,7 @@ def open_project(req):
         req['volume_id'] = os.getcwd() if req['volume_id'] == "" else req['volume_id']
         # TODO: Change this to volume
         print(os.path.join(os.getcwd(), 'config'))
-        container = client.containers.run("codercom/code-server:latest", detach=True, 
+        container = client.containers.run(req["language"]["image_id"], detach=True, 
                                         hostname=name, name=name, 
                                         volumes={
                                             os.path.join(os.getcwd(), 'config'): {'bind': '/home/coder/.config', 'mode': 'rw'},
