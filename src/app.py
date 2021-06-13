@@ -57,7 +57,7 @@ def open_project(req):
         container = client.containers.run("codercom/code-server:latest", detach=True, 
                                         hostname=name, name=name, 
                                         volumes={
-                                            os.path.join(os.getcwd(), 'config'): {'bind': '/home/coder/.config', 'mode': 'rw'},
+                                            os.getenv('CONFIG_VOL'): {'bind': '/home/coder/.config', 'mode': 'ro'},
                                             # TODO: User perms
                                             req['volume_id']: {'bind': '/home/coder/project', 'mode': 'rw'},
                                         },
@@ -130,7 +130,7 @@ def duplicate_volume(vol_id):
                                             vol_id: {'bind': '/from', 'mode': 'rw'},
                                             dest_vol.name: {'bind': '/to', 'mode': 'rw'},
                                         },
-                                        entrypoint='cp -av /from /to')
+                                        entrypoint='cp -rav /from/. /to')
         for log in container:
             print_status(f'Logs:\n{log.decode("utf-8")}')
 
