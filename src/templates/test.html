@@ -43,8 +43,24 @@
         <div id="console"></div>
         
         <script type="text/javascript" charset="utf-8">
-            const test_data = {id: "0", name: "Main shade", language: "nodejs", user: "Jim Fixtures", 
-                volume_id: "", last_mdate: "2020-12-01T18:47:36.754Z"}
+            const test_data = {
+                "id": 0,
+                "name": "test",
+                "user": {
+                    "id": 3,
+                    "username": "shbr",
+                    "email": "shbr@gmail.com",
+                    "url": "/api/users/3/"
+                },
+                "language": {
+                    "id": 1,
+                    "name": "Python",
+                    "image_id": "codercom/code-server",
+                    "url": "/api/languages/1/"
+                },
+                "volume_id": "123",
+                "last_mdate": "2021-06-12T16:59:05.639000Z"
+            }
             var vol_id = undefined;
             const socket = io();
             socket.on('connect', () =>  $('#status').text('Status: Connected'));
